@@ -43,7 +43,8 @@ app.get('/health', (_req, res) => {
 // Scalar API Documentation - using dynamic import for ES module
 const setupDocs = async () => {
     try {
-        const { apiReference } = await import('@scalar/express-api-reference');
+        // Use eval to prevent TypeScript from transforming the import
+        const { apiReference } = await eval('import("@scalar/express-api-reference")');
         app.use('/docs', apiReference({
             spec: {
                 content: swaggerSpec,
@@ -52,6 +53,7 @@ const setupDocs = async () => {
             layout: 'modern',
             showSidebar: true,
         }));
+        console.log('Scalar API documentation loaded at /docs');
     } catch (error) {
         console.warn('Failed to load Scalar API documentation:', error);
     }
