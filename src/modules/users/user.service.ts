@@ -1,12 +1,23 @@
+import User from "../../models/User";
 import { getUsers } from "./user.data";
-import { User } from "./user.interface";
+import { User as UserInterface } from "./user.interface";
 
 export class UserService {
-  getAllUsers(): User[] {
-    return getUsers();
+  async getAllUsers(): Promise<User[] | UserInterface[]> {
+    try {
+      return await User.findAll();
+    } catch (error) {
+      console.log('Database unavailable, using fallback data');
+      return getUsers();
+    }
   }
 
-  getUserById(id: number): User | undefined {
-    return getUsers().find((user) => user.id === id);
+  async getUserById(id: number): Promise<User | UserInterface | null> {
+    try {
+      return await User.findByPk(id);
+    } catch (error) {
+      console.log('Database unavailable, using fallback data');
+      return getUsers().find((user) => user.id === id) || null;
+    }
   }
 }
