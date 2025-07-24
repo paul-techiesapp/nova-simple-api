@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { apiReference } from '@scalar/express-api-reference';
 import userRoutes from './modules/users/user.route';
 import postRoutes from './modules/posts/post.routes';
 import { initializeDatabase } from './models';
+import { swaggerSpec } from './config/swagger';
 
 dotenv.config();
 
@@ -19,8 +21,40 @@ const apiPrefix = process.env.API_PREFIX || '/api';
 app.use(`${apiPrefix}/users`, userRoutes);
 app.use(`${apiPrefix}/posts`, postRoutes);
 
-app.get('/health', (req, res) => {
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     tags:
+ *       - Health
+ *     summary: Health check endpoint
+ *     description: Check if the API is running and healthy
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthCheck'
+ */
+app.get('/health', (_req, res) => {
     res.json({ status: "ok" });
+});
+
+// Scalar API Documentation
+app.use('/docs', apiReference({
+    spec: {
+        content: swaggerSpec,
+    },
+    theme: 'purple',
+    layout: 'modern',
+    showSidebar: true,
+}));
+
+// OpenAPI JSON endpoint
+app.get('/openapi.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
 });
 
 // Initialize database and start server
