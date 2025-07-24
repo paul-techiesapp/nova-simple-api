@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { apiReference } from '@scalar/express-api-reference';
 import userRoutes from './modules/users/user.route';
 import postRoutes from './modules/posts/post.routes';
 import { initializeDatabase } from './models';
@@ -41,15 +40,22 @@ app.get('/health', (_req, res) => {
     res.json({ status: "ok" });
 });
 
-// Scalar API Documentation
-app.use('/docs', apiReference({
-    spec: {
-        content: swaggerSpec,
-    },
-    theme: 'purple',
-    layout: 'modern',
-    showSidebar: true,
-}));
+// Scalar API Documentation - using dynamic import for ES module
+const setupDocs = async () => {
+    try {
+        const { apiReference } = await import('@scalar/express-api-reference');
+        app.use('/docs', apiReference({
+            spec: {
+                content: swaggerSpec,
+            },
+            theme: 'purple',
+            layout: 'modern',
+            showSidebar: true,
+        }));
+    } catch (error) {
+        console.warn('Failed to load Scalar API documentation:', error);
+    }
+};
 
 // OpenAPI JSON endpoint
 app.get('/openapi.json', (_req, res) => {
@@ -61,6 +67,9 @@ app.get('/openapi.json', (_req, res) => {
 const startServer = async () => {
     try {
         const dbConnected = await initializeDatabase();
+        
+        // Setup Scalar documentation
+        await setupDocs();
         
         app.listen(PORT, () => {
             console.log(`Server is running on PORT=${PORT}`);
